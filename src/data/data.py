@@ -8,8 +8,9 @@ from numpy import ndarray
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from src.data.parse_util import NON_COUNTRIES, SYNONYMS, check_synonym
-from src.data.fetch_util import fetch_workbook_from_url, load_matrix, save_matrix
+from data.parse_util import NON_COUNTRIES, SYNONYMS, check_synonym
+from data.fetch_util import fetch_workbook_from_url, load_matrix, save_matrix
+
 
 
 """
@@ -78,7 +79,6 @@ class DataSet:
             countries: list[str],
             population_counts: ndarray,
             ims_matrix: ndarray,
-            cached_migration_matrix: Optional[ndarray]=None
     ):
         assert len(countries) == len(population_counts) == len(ims_matrix)
         assert numpy.all(numpy.diagonal(ims_matrix) == 0)
@@ -87,20 +87,9 @@ class DataSet:
         self._population_counts: ndarray = population_counts
         self.ims_matrix: ndarray = ims_matrix
 
-        if cached_migration_matrix is not None:
-            self.migration_matrix = cached_migration_matrix
-            return
-
-        migration_matrix: ndarray = numpy.copy(ims_matrix)
         populations: ndarray = numpy.array(population_counts)
         ims_sums: ndarray = numpy.sum(ims_matrix, axis=0)
-        diagonal: ndarray = populations - ims_sums
-        assert numpy.all(diagonal > 0)
-        numpy.fill_diagonal(migration_matrix, diagonal)
 
-        migration_matrix = numpy.divide(migration_matrix, populations)
-        assert numpy.all(migration_matrix <= 1)
-        self.migration_matrix: ndarray = migration_matrix
 
     def get_population(self, country: str) -> int:
         assert country in self.countries
@@ -118,13 +107,11 @@ class DataSet:
         countries_path: str = path + 'countries.txt'
         population_path: str = path + 'population.txt'
         ims_path: str = path + 'ims.txt'
-        migration_path: str = path + 'migration.txt'
 
         os.makedirs(f'{MATRIX_CACHE_DIRECTORY}{str(self.year.value)}', exist_ok=True)
         numpy.savetxt(countries_path, numpy.array(self.countries), fmt='%s')
         numpy.savetxt(population_path, self._population_counts, fmt='%i')
         numpy.savetxt(ims_path, self.ims_matrix, fmt='%i')
-        numpy.savetxt(migration_path, self.migration_matrix, fmt='%.15lf')
 
 
 def _fetch_data() -> Optional[tuple[Worksheet, Worksheet]]:
@@ -206,20 +193,19 @@ def get_data(year: Year) -> DataSet:
     countries_path: str = path + 'countries.txt'
     population_path: str = path + 'population.txt'
     ims_path: str = path + 'ims.txt'
-    migration_path: str = path + 'migration.txt'
+
 
     countries: Optional[ndarray] = None
     if os.path.isfile(countries_path):
         countries = numpy.loadtxt(countries_path, dtype='str', delimiter='$')
     population: Optional[ndarray] = load_matrix(population_path)
     ims: Optional[ndarray] = load_matrix(ims_path)
-    migration: Optional[ndarray] = load_matrix(migration_path)
 
-    if population is None or ims is None or migration is None:
+    if population is None or ims is None:
         population_worksheet, ims_worksheet = _fetch_data()
         assert population_worksheet is not None and ims_worksheet is not None
         dataset = _parse(population_worksheet, ims_worksheet, year)
         dataset.save()
         return dataset
 
-    return DataSet(year, countries.tolist(), population, ims, migration)
+    return DataSet(year, countries.tolist(), population, ims)

@@ -1,6 +1,6 @@
 import numpy
 
-from data.data import DataSet, Year
+from data.data import DataSet, Year, get_data
 import data.data
 
 
@@ -17,7 +17,7 @@ def main():
     )
 
 
-    dataset = data.data.get_data(Year.Y2020)
+    dataset = get_data(Year.Y2020)
     print('Sweden population:', dataset.get_population('Sweden'))
 
     ims_matrix = dataset.ims_matrix
