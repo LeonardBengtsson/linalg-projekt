@@ -84,17 +84,14 @@ class DataSet:
         assert numpy.all(numpy.diagonal(ims_matrix) == 0)
         self.year: Year = year
         self.countries: list[str] = countries
-        self._population_counts: ndarray = population_counts
+        self.population: ndarray = population_counts
         self.ims_matrix: ndarray = ims_matrix
-
-        populations: ndarray = numpy.array(population_counts)
-        ims_sums: ndarray = numpy.sum(ims_matrix, axis=0)
 
 
     def get_population(self, country: str) -> int:
         assert country in self.countries
         index: int = self.countries.index(country)
-        return self._population_counts[index]
+        return self.population[index]
 
     def get_ims(self, origin: str, destination: str) -> int:
         assert origin in self.countries and destination in self.countries
@@ -110,7 +107,7 @@ class DataSet:
 
         os.makedirs(f'{MATRIX_CACHE_DIRECTORY}{str(self.year.value)}', exist_ok=True)
         numpy.savetxt(countries_path, numpy.array(self.countries), fmt='%s')
-        numpy.savetxt(population_path, self._population_counts, fmt='%i')
+        numpy.savetxt(population_path, self.population, fmt='%i')
         numpy.savetxt(ims_path, self.ims_matrix, fmt='%i')
 
 

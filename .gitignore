@@ -1,4 +1,4 @@
 .cache/
 .idea/
-
+__pycache__
 src/data/__pycache__
