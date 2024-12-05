@@ -25,7 +25,7 @@ def main():
     natives = dataset.population - immigration
     population_migration = math_utils.normalize(ims_matrix + numpy.diag(natives))
 
-    land = input('Choose country: ')
+    land = input('Choose country: ').strip()
     assert land in dataset.countries
     generations = int(input('Choose how many generations: '))
     assert generations > 0
@@ -37,9 +37,21 @@ def main():
     result = numpy.linalg.matrix_power(population_migration, generations) @ initial_vector
 
     tuples = sorted(zip(dataset.countries, result), key=lambda k: k[1], reverse=True)
-    
+
+    included_countries: list[tuple[str, int]] = []
+    max_name_length: int = len('Others')
+    included_percentage: int = 0
     for country, value in tuples:
-        print(f'{country}: {round(float(value) * 100, 2)}%')
+        if value > 0.01:
+            included_countries.append((country, value))
+            max_name_length = max(max_name_length, len(country))
+            included_percentage += value
+    print(f'+{'':-<{max_name_length + 2}}+---------+')
+    for country, value in included_countries:
+        print(f'| {country:{max_name_length}} | {round(float(value) * 100, 2):6}% |')
+    print(f'+{'':-<{max_name_length + 2}}+---------+')
+    print(f'| {'Others':{max_name_length}} | {round(float(1 - included_percentage) * 100, 2):6}% |')
+    print(f'+{'':-<{max_name_length + 2}}+---------+')
 
 
 if __name__ == '__main__':
