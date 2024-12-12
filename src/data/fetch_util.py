@@ -28,13 +28,13 @@ def fetch_workbook_from_url(url: str, path: str) -> Optional[Workbook]:
     return openpyxl.open(path, read_only=True)
 
 
-def load_matrix(path: str) -> Optional[numpy.ndarray[Any, Any]]:
+def load_matrix(path: str, dtype: type = float) -> Optional[numpy.ndarray]:
     if not os.path.isfile(path):
         return None
-    return numpy.loadtxt(path)
+    return numpy.loadtxt(path, dtype=dtype)
 
 
-def save_matrix(path: str, matrix: numpy.ndarray[Any, Any], float_numbers: bool = False):
+def save_matrix(path: str, matrix: numpy.ndarray, float_numbers: bool = False):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if float_numbers:
         numpy.savetxt(path, matrix, fmt='%f')

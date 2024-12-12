@@ -97,7 +97,7 @@ class DataSet:
         assert origin in self.countries and destination in self.countries
         origin_index: int = self.countries.index(origin)
         destination_index: int = self.countries.index(destination)
-        return self.ims_matrix[destination_index, origin_index]
+        return int(self.ims_matrix[destination_index, origin_index])
 
     def save(self):
         path: str = MATRIX_CACHE_DIRECTORY + str(self.year.value) + '/'
@@ -191,12 +191,11 @@ def get_data(year: Year) -> DataSet:
     population_path: str = path + 'population.txt'
     ims_path: str = path + 'ims.txt'
 
-
     countries: Optional[ndarray] = None
     if os.path.isfile(countries_path):
         countries = numpy.loadtxt(countries_path, dtype='str', delimiter='$')
-    population: Optional[ndarray] = load_matrix(population_path)
-    ims: Optional[ndarray] = load_matrix(ims_path)
+    population: Optional[ndarray] = load_matrix(population_path, numpy.uint32)
+    ims: Optional[ndarray] = load_matrix(ims_path, numpy.uint32)
 
     if population is None or ims is None:
         population_worksheet, ims_worksheet = _fetch_data()
